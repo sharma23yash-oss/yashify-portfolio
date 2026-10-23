@@ -28,7 +28,7 @@ const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline';
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://visitor-badge.laobi.icu https://i.ytimg.com;
+  img-src 'self' blob: data: https://visitor-badge.laobi.icu https://i.ytimg.com https://www.notion.so https://prod-files-secure.s3.us-west-2.amazonaws.com https://s3.us-west-2.amazonaws.com https://images.unsplash.com;
   font-src 'self';
   connect-src ${connectSrc};
   frame-src https://www.youtube-nocookie.com;

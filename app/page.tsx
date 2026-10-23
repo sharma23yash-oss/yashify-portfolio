@@ -11,6 +11,8 @@
  *               and one panel per tab. Everything the Portfolio shows is still in this file.
  *
  * Setup     npm i framer-motion lucide-react
+ * Hero      components/hero/EquityResearchHero.tsx  (the words of the hero are in its CONTENT block;
+ *           the name and the one-line headline still come from SITE below)
  * 3D        components/three/  (candlestick chart on the right of the hero, data mesh on the left)
  *           npm i --save-exact three@0.182.0 @react-three/fiber@9.8.2 @react-three/drei@10.7.9
  *           npm i -D --save-exact @types/three@0.182.0
@@ -43,15 +45,12 @@ import {
   motion,
   useScroll,
   useSpring,
-  type Variants,
 } from 'framer-motion';
 import {
   ArrowUpRight,
   Building2,
   Check,
-  ChevronDown,
   Copy,
-  Download,
   Flag,
   GraduationCap,
   Landmark,
@@ -78,8 +77,7 @@ import {
   SPRING,
   cn,
 } from '@/components/ui/tokens';
-import { MarketTrend } from '@/components/three/MarketTrend';
-import { DataMesh } from '@/components/three/DataMesh';
+import { EquityResearchHero, HERO_ITEM } from '@/components/hero/EquityResearchHero';
 import { TabBar, TabPanel } from '@/components/tabs/TabBar';
 import { goToView, useView, useViewEffects, type ViewId } from '@/components/tabs/view';
 import { DrivePanel, type DriveContent } from '@/components/tabs/DrivePanel';
@@ -343,15 +341,6 @@ function mailtoUrl(subject: string, message: string) {
 
 /* ============================== DESIGN TOKENS =============================== */
 
-const HEADLINE_PARTS = SITE.headline.split(' | ');
-
-/** The two 3D scenes in the hero. Each fades out towards the text, so it never competes with it.
- *  Chart: low and full width on small screens, in the right-hand gutter from xl (1280px) up.
- *  Mesh: left-hand gutter, wide screens only (the `minWidth` on the component matches `xl`). */
-const HERO_CHART =
-  'inset-x-0 bottom-0 h-[50%] [mask-image:linear-gradient(to_bottom,transparent,#000_35%)] xl:inset-y-0 xl:left-[58%] xl:right-0 xl:h-auto xl:[mask-image:linear-gradient(to_right,transparent,#000_30%)] 2xl:left-[54%]';
-const HERO_MESH =
-  'inset-y-0 left-0 w-[36%] [mask-image:linear-gradient(to_left,transparent,#000_30%)] 2xl:w-[42%]';
 const YEAR = new Date().getFullYear();
 const SPY_OFFSET = 168; // the two-row floating bar plus breathing room (matches scroll-mt-36)
 
@@ -370,15 +359,6 @@ const MARK_ICONS = {
   md: 'h-6 w-6',
   lg: 'h-7 w-7 sm:h-8 sm:w-8',
 } as const;
-
-const HERO_CONTAINER: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
-};
-const HERO_ITEM: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: EASE } },
-};
 
 /* ============================ MOTION + FX STYLES ============================ */
 /* Small CSS effects that are easier to express as CSS than as utility classes.
@@ -1249,120 +1229,6 @@ function HeroLogos({ onNavigate }: { onNavigate: (id: SectionId) => void }) {
   );
 }
 
-function Hero({
-  onNavigate,
-  onContact,
-}: {
-  onNavigate: (id: SectionId) => void;
-  onContact: () => void;
-}) {
-  return (
-    <section id="home" className="relative isolate scroll-mt-36 overflow-hidden">
-      <MarketTrend className={HERO_CHART} />
-      <DataMesh className={HERO_MESH} minWidth={1280} />
-      <motion.div
-        variants={HERO_CONTAINER}
-        initial="hidden"
-        animate="show"
-        className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-24 pt-12 text-center sm:px-6 sm:pt-16 md:pb-32"
-      >
-        <motion.div variants={HERO_ITEM}>
-          <div className="relative mx-auto w-fit">
-            <span aria-hidden="true" className="ys-glow" />
-            <span aria-hidden="true" className="ys-ring" />
-            <img
-              src="/image.png"
-              alt="Yash Sharma"
-              className="w-32 h-32 rounded-full object-cover object-top border-4 border-white shadow-lg mx-auto mb-6"
-            />
-          </div>
-        </motion.div>
-
-        <motion.h1
-          variants={HERO_ITEM}
-          className="ys-name text-balance font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
-        >
-          {SITE.name}
-        </motion.h1>
-
-        <motion.p
-          variants={HERO_ITEM}
-          className="mt-6 flex flex-col items-center gap-1 text-base font-medium text-slate-800 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-3 sm:text-lg"
-        >
-          {HEADLINE_PARTS.map((part, i) => (
-            <span key={part} className="inline-flex items-center gap-3">
-              {i > 0 && (
-                <span aria-hidden="true" className="hidden text-slate-300 sm:inline">
-                  |
-                </span>
-              )}
-              {part}
-            </span>
-          ))}
-        </motion.p>
-
-        <motion.div
-          variants={HERO_ITEM}
-          className="mt-10 flex flex-wrap items-center justify-center gap-3"
-        >
-          <motion.a
-            href="/resume.pdf"
-            download={SITE.resumeDownloadName}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              'ys-sheen group inline-flex items-center gap-2.5 rounded-full bg-[#0B1F3A] px-8 py-4 text-base font-semibold text-white shadow-[0_14px_28px_-12px_rgba(11,31,58,0.65)] transition-colors duration-200 hover:bg-[#14305A]',
-              FOCUS,
-            )}
-          >
-            <Download className="h-5 w-5 transition-transform duration-200 group-hover:translate-y-0.5" />
-            Download Resume
-          </motion.a>
-          <motion.button
-            type="button"
-            onClick={onContact}
-            aria-haspopup="dialog"
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              'group inline-flex items-center gap-2.5 rounded-full border border-slate-300 bg-white px-7 py-4 text-base font-semibold text-[#0B1F3A] shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors duration-200 hover:border-[#0B1F3A]/40 hover:bg-slate-50',
-              FOCUS,
-            )}
-          >
-            <Mail className="h-5 w-5 transition-transform duration-200 group-hover:-rotate-6" />
-            Get in touch
-          </motion.button>
-        </motion.div>
-
-        <HeroLogos onNavigate={onNavigate} />
-
-        <motion.div variants={HERO_ITEM} className="mt-14">
-          <a
-            href="#education"
-            aria-label="Scroll to Education"
-            onClick={(e: MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              onNavigate('education');
-            }}
-            className={cn(
-              'grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors hover:text-[#0B1F3A]',
-              FOCUS,
-            )}
-          >
-            <motion.span
-              aria-hidden="true"
-              animate={{ y: [0, 4, 0] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <ChevronDown className="h-5 w-5" />
-            </motion.span>
-          </a>
-        </motion.div>
-      </motion.div>
-    </section>
-  );
-}
-
 function EducationSection() {
   return (
     <section id="education" className="scroll-mt-36 border-t border-slate-900/[0.07] py-20 sm:py-24">
@@ -1997,7 +1863,15 @@ export default function Page() {
         <main>
           {/* The Portfolio stays in the page while another tab is open, so it comes back exactly as you left it. */}
           <TabPanel id="portfolio" active={inPortfolio} keepMounted>
-            <Hero onNavigate={goTo} onContact={openContact} />
+            <EquityResearchHero
+              name={SITE.name}
+              headline={SITE.headline}
+              resumeFileName={SITE.resumeDownloadName}
+              onContact={openContact}
+              onNavigate={goTo}
+            >
+              <HeroLogos onNavigate={goTo} />
+            </EquityResearchHero>
             <EducationSection />
             <InternshipsSection />
             <ProjectsSection />

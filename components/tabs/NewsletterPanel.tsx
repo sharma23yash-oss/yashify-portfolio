@@ -1,7 +1,8 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
-import { ArrowUpRight, Check, Copy, Mail, Newspaper } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, ArrowUpRight, Check, Copy, Mail, Newspaper } from 'lucide-react';
 import { Chip, ExternalAnchor, Reveal, SectionHeading, SpotCard } from '@/components/ui/primitives';
 import { BTN_PRIMARY, BTN_SECONDARY, CARD, FIELD, FOCUS, ICON_TILE, cn } from '@/components/ui/tokens';
 import { copySuffix, useCopy } from './copy';
@@ -247,7 +248,12 @@ export function NewsletterPanel({ content }: { content: NewsletterContent }) {
             </Reveal>
           ))}
         </div>
-
+<div className="mt-10 text-center">
+  <Link href="/newsletters" className={cn(BTN_SECONDARY, 'px-6 py-3', FOCUS)}>
+    Read the latest articles
+    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+  </Link>
+</div>
         {endpoint ? <EmailSignup endpoint={endpoint} /> : null}
 
         <p role="status" aria-live="polite" className="sr-only">
