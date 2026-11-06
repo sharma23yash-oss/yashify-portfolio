@@ -44,7 +44,8 @@ type Pillar = {
   points: string[]; // keep each one short: a line or two
   chips: string[]; // tools and sources
   /** `#projects` or `#education` jump to that part of the page; an https address opens in a new tab. */
-  action: { label: string; href: `#${HeroSection}` | `https://${string}` };
+  /** Optional link under the card. */
+  action?: { label: string; href: `#${HeroSection}` | `https://${string}` };
 };
 
 const CONTENT = {
@@ -63,11 +64,6 @@ const CONTENT = {
         'Self-initiated research across banking, pharma and mutual funds',
       ],
       chips: ['Screener.in', 'CMIE Prowess', 'Annual reports'],
-      // YGL Pulse on LinkedIn
-      action: {
-        label: 'Read YGL Pulse',
-        href: 'https://www.linkedin.com/newsletters/ygl-pulse-7485210121896206336/',
-      },
     },
     {
       id: 'modeling',
@@ -133,7 +129,7 @@ function PillarCard({
   onNavigate: (id: HeroSection) => void;
 }) {
   const { title, Icon, points, chips, action } = pillar;
-  const inPage = action.href.startsWith('#');
+  const inPage = action?.href.startsWith('#') ?? false;
   return (
     <SpotCard className="flex h-full flex-col p-6">
       <div className="flex items-center gap-3.5">
@@ -164,26 +160,28 @@ function PillarCard({
           ))}
         </ul>
 
-        <div className="mt-5">
-          {inPage ? (
-            <a
-              href={action.href}
-              onClick={(e: MouseEvent<HTMLAnchorElement>) => {
-                e.preventDefault();
-                onNavigate(action.href.slice(1) as HeroSection);
-              }}
-              className={ACTION_LINK}
-            >
-              {action.label}
-              <ArrowRight aria-hidden="true" className="h-4 w-4" />
-            </a>
-          ) : (
-            <ExternalAnchor href={action.href} label={action.label} className={ACTION_LINK}>
-              {action.label}
-              <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
-            </ExternalAnchor>
-          )}
-        </div>
+        {action ? (
+          <div className="mt-5">
+            {inPage ? (
+              <a
+                href={action.href}
+                onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+                  e.preventDefault();
+                  onNavigate(action.href.slice(1) as HeroSection);
+                }}
+                className={ACTION_LINK}
+              >
+                {action.label}
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
+              </a>
+            ) : (
+              <ExternalAnchor href={action.href} label={action.label} className={ACTION_LINK}>
+                {action.label}
+                <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+              </ExternalAnchor>
+            )}
+          </div>
+        ) : null}
       </div>
     </SpotCard>
   );
