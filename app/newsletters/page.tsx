@@ -10,6 +10,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: 'Newsletters · Yash Sharma',
   description: 'Latest newsletter articles by Yash Sharma.',
+  alternates: { canonical: '/newsletters' },
 };
 
 /** "2026-10-20" or "2026-10-20T09:30:00.000+05:30" becomes { day: "2026-10-20", label: "20 Oct 2026" }. */

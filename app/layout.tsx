@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,10 +22,11 @@ const geistMono = Geist_Mono({
  * twitter:title and twitter:description. So the portfolio gets the words below, and a page
  * with its own title and description (such as /news) gets those, with nothing else to set.
  *
- * SITE_URL is the address the share tags and the preview image point to: the one people
- * should land on when they open a shared link. Change this one line if the site moves.
+ * SITE_URL (lib/site.ts) is the address the share tags, the preview image and the canonical
+ * tag point to. The canonical tag tells Google that yashify.tech is the real address, so the
+ * same site on yashify-portfolio.vercel.app is not counted as a duplicate. A page with its own
+ * address (such as /newsletters) sets its own canonical.
  */
-const SITE_URL = "https://yashify.tech";
 
 const TITLE = "Yash Sharma | Equity Research & Financial Modeling";
 // Keep it under about 155 characters; apps cut longer text.
@@ -35,6 +37,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
+  alternates: { canonical: "/" },
   authors: [{ name: "Yash Sharma", url: "https://www.linkedin.com/in/yaashify" }],
   openGraph: {
     type: "website",
@@ -56,13 +59,56 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Structured data (schema.org Person): tells Google and AI search who this site is about, so a
+ * search for the name can show the right profile and links. Keep it to facts that are on the page.
+ */
+const PERSON_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Yash Sharma",
+  url: SITE_URL,
+  image: `${SITE_URL}/image.png`,
+  email: "mailto:sharma23yash@gmail.com",
+  description:
+    "MBA (Finance & Marketing) student at MANIT Bhopal, graduating 2027, focused on equity research and financial modeling.",
+  affiliation: { "@type": "CollegeOrUniversity", name: "Maulana Azad National Institute of Technology (MANIT), Bhopal" },
+  alumniOf: [
+    { "@type": "CollegeOrUniversity", name: "University Institute of Technology, RGPV" },
+    { "@type": "CollegeOrUniversity", name: "Makhanlal Chaturvedi National University (MCU), Bhopal" },
+  ],
+  knowsAbout: [
+    "Equity research",
+    "Financial modeling",
+    "DCF valuation",
+    "Three-statement modeling",
+    "Portfolio optimization",
+    "Excel",
+    "Python",
+    "SQL",
+    "Power BI",
+  ],
+  sameAs: [
+    "https://www.linkedin.com/in/yaashify",
+    "https://github.com/sharma23yash-oss",
+    "https://youtube.com/@YASHifyfinance",
+  ],
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          // `<` is escaped so the data can never close the script tag early.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_JSON_LD).replace(/</g, "\\u003c") }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

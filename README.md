@@ -2,7 +2,7 @@
 
 The personal portfolio site of **Yash Sharma**: resume, projects, shared files, YouTube, newsletters and a launchpad of AI tools on one page with five tabs.
 
-**Live site: [yashify-portfolio.vercel.app](https://yashify-portfolio.vercel.app)**
+**Live site: [yashify.tech](https://yashify.tech)**
 
 ## The five tabs
 

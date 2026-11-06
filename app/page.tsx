@@ -29,6 +29,7 @@
  * `color-scheme: light` so an OS-level dark mode cannot leak in.
  */
 
+import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   ChangeEvent,
@@ -49,6 +50,7 @@ import {
 import {
   ArrowUpRight,
   Building2,
+  ChartPie,
   Check,
   Copy,
   Flag,
@@ -233,14 +235,25 @@ type ProjectItem = {
   linkLabel?: string;
 };
 
+// Finance work first: it is what recruiters scan for. Ventures follow.
 const PROJECTS: ProjectItem[] = [
   {
-    title: 'YASH Growth Labs',
-    tagline: 'AI & financial research startup',
+    title: 'Indian Banking Sector Optimizer',
+    tagline: 'Modern Portfolio Theory, Python',
     summary:
-      'An AI and financial research startup, and the umbrella brand for my ventures, research and content.',
-    tags: ['AI', 'Financial Research', 'Startup'],
-    Icon: Rocket,
+      'Applies Modern Portfolio Theory to 41 Indian public, private and small finance banks, using up to 5 years of daily prices, and builds the portfolio with the highest Sharpe ratio. Plots the efficient frontier and the exact weight of each bank.',
+    tags: ['Python', 'PyPortfolioOpt', 'Sharpe Ratio', 'Efficient Frontier'],
+    Icon: ChartPie,
+    href: 'https://github.com/sharma23yash-oss/indian-banking-optimizer',
+    linkLabel: 'View the Indian Banking Sector Optimizer repository',
+  },
+  {
+    title: 'Excel DCF Modeling & Data Analytics',
+    tagline: 'Power BI, SQL, Python',
+    summary:
+      'Discounted cash flow models in Excel and analytics workflows that turn raw financial data into decisions.',
+    tags: ['Excel', 'DCF', 'Power BI', 'SQL', 'Python'],
+    Icon: TrendingUp,
   },
   {
     title: 'useYARI',
@@ -262,12 +275,12 @@ const PROJECTS: ProjectItem[] = [
     linkLabel: 'View the SPY UPI repository',
   },
   {
-    title: 'Excel DCF Modeling & Data Analytics',
-    tagline: 'Power BI, SQL, Python',
+    title: 'YASH Growth Labs',
+    tagline: 'AI & financial research startup',
     summary:
-      'Discounted cash flow models in Excel and analytics workflows that turn raw financial data into decisions.',
-    tags: ['Excel', 'DCF', 'Power BI', 'SQL', 'Python'],
-    Icon: TrendingUp,
+      'An AI and financial research startup, and the umbrella brand for my ventures, research and content.',
+    tags: ['AI', 'Financial Research', 'Startup'],
+    Icon: Rocket,
   },
 ];
 
@@ -304,7 +317,8 @@ const ACHIEVEMENTS: AchievementItem[] = [
 
 /** Official logos are not bundled: save each file in public/logos, named after its slug above. */
 const LOGO_DIR = '/logos';
-const LOGO_FORMATS = ['png', 'svg', 'webp', 'jpg'] as const; // tried in this order
+// Tried in this order; the first one is what public/logos holds today, so no request is wasted.
+const LOGO_FORMATS = ['jpg', 'png', 'svg', 'webp'] as const;
 
 type ContactTopic = { id: string; label: string; subject: string };
 
@@ -1169,9 +1183,12 @@ function Header({
             }}
             className={cn('shrink-0 rounded-full', FOCUS)}
           >
-            <img
+            {/* next/image serves a small resized copy instead of the 2 MB original */}
+            <Image
               src="/image.png"
               alt="YS"
+              width={36}
+              height={36}
               className="h-9 w-9 rounded-full object-cover object-top border border-slate-200"
             />
           </a>
@@ -1351,7 +1368,7 @@ function ProjectsSection() {
         <SectionHeading
           eyebrow="Selected work"
           title="Projects"
-          blurb="Ventures and analytics work at the intersection of finance, AI and data."
+          blurb="Portfolio optimization, financial models and fintech ventures."
         />
 
         <div className="mt-14 grid gap-6 md:grid-cols-2">
@@ -1646,9 +1663,11 @@ function ContactPanel({ topic, message, onTopic, onMessage, onClose, fabRef }: C
       <div aria-hidden="true" className="h-1 w-full" style={RULE_STYLE} />
       <div className="p-5">
         <div className="flex items-start gap-3">
-          <img
+          <Image
             src="/image.png"
             alt=""
+            width={44}
+            height={44}
             className="h-11 w-11 shrink-0 rounded-full border border-slate-200 object-cover object-top"
           />
           <div className="min-w-0 flex-1">

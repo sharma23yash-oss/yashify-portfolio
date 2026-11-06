@@ -50,6 +50,8 @@ type Pillar = {
 const CONTENT = {
   /** Shown in the page heading, under the name. */
   role: 'Equity research & financial modeling',
+  /** A short line above the buttons telling recruiters when you can join. Set to '' to hide it. */
+  availability: 'Open to full-time roles in equity research, financial analysis and banking from 2027',
   lead: 'I research Indian companies through annual reports and concalls, and build three-statement and DCF models to test what the numbers say.',
   pillars: [
     {
@@ -74,6 +76,7 @@ const CONTENT = {
       points: [
         'Three-statement model of ICICI Bank: P&L, balance sheet and cash flow, with forecasts',
         'DCF valuation models in Excel',
+        'Python portfolio optimizer for 41 Indian banks, using Modern Portfolio Theory',
       ],
       chips: ['Excel', 'Python', 'SQL', 'Power BI'],
       action: { label: 'See the projects', href: '#projects' },
@@ -212,7 +215,9 @@ export function EquityResearchHero({
         animate="show"
         className="mx-auto flex max-w-4xl flex-col items-center px-4 pb-24 pt-12 text-center sm:px-6 sm:pt-16 md:pb-32"
       >
-        <motion.div variants={HERO_ITEM}>
+        {/* The photo, name, headline and lead are visible from the first paint (no fade-in), so the
+            page reads at once, even before its JavaScript runs. Everything below them animates in. */}
+        <div>
           <div className="relative mx-auto w-fit">
             <span aria-hidden="true" className="ys-glow" />
             <span aria-hidden="true" className="ys-ring" />
@@ -227,9 +232,9 @@ export function EquityResearchHero({
               className="mx-auto mb-6 h-32 w-32 rounded-full border-4 border-white object-cover object-top shadow-lg"
             />
           </div>
-        </motion.div>
+        </div>
 
-        <motion.h1 id="hero-heading" variants={HERO_ITEM} className="flex flex-col items-center">
+        <h1 id="hero-heading" className="flex flex-col items-center">
           <span className="ys-name text-balance font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
             {name}
           </span>
@@ -237,11 +242,10 @@ export function EquityResearchHero({
           <span className="mt-4 text-balance text-xl font-semibold tracking-tight text-[#0B1F3A] sm:text-2xl lg:text-3xl">
             {CONTENT.role}
           </span>
-        </motion.h1>
+        </h1>
 
         {headlineParts.length > 0 && (
-          <motion.p
-            variants={HERO_ITEM}
+          <p
             className="mt-5 flex flex-col items-center gap-1 text-base font-medium text-slate-800 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-3 sm:text-lg"
           >
             {headlineParts.map((part, i) => (
@@ -254,19 +258,26 @@ export function EquityResearchHero({
                 {part}
               </span>
             ))}
+          </p>
+        )}
+
+        <p className="mt-5 max-w-[44rem] text-balance text-base leading-relaxed text-slate-800 sm:text-lg">
+          {CONTENT.lead}
+        </p>
+
+        {CONTENT.availability && (
+          <motion.p
+            variants={HERO_ITEM}
+            className="mt-7 inline-flex max-w-full items-center gap-2.5 rounded-full border border-emerald-200 bg-emerald-50/90 px-4 py-2 text-left text-sm font-semibold text-emerald-900"
+          >
+            <span aria-hidden="true" className="ys-pulse h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+            {CONTENT.availability}
           </motion.p>
         )}
 
-        <motion.p
-          variants={HERO_ITEM}
-          className="mt-5 max-w-[44rem] text-balance text-base leading-relaxed text-slate-800 sm:text-lg"
-        >
-          {CONTENT.lead}
-        </motion.p>
-
         <motion.div
           variants={HERO_ITEM}
-          className="mt-9 flex flex-wrap items-center justify-center gap-3"
+          className="mt-7 flex flex-wrap items-center justify-center gap-3"
         >
           <motion.a
             href={resumeHref}
