@@ -41,8 +41,22 @@ type ChartResponse = {
   };
 };
 
-/** Daily closes for a Yahoo symbol, oldest first. `range` is a Yahoo range such as 1mo or 3mo. */
-export async function getDaily(symbol: string, range = '1mo'): Promise<Series> {
+// The daily and the weekly brief ask for the same prices minutes apart; reuse them for 10 minutes.
+const SERIES_TTL_MS = 10 * 60_000;
+const seriesCache = new Map<string, { at: number; series: Promise<Series> }>();
+
+/** Daily closes for a Yahoo symbol, oldest first. `range` is a Yahoo range such as 1mo, 3mo or 1y. */
+export function getDaily(symbol: string, range = '1mo'): Promise<Series> {
+  const key = `${symbol}|${range}`;
+  const hit = seriesCache.get(key);
+  if (hit && Date.now() - hit.at < SERIES_TTL_MS) return hit.series;
+  const series = fetchDaily(symbol, range);
+  seriesCache.set(key, { at: Date.now(), series });
+  series.catch(() => seriesCache.delete(key)); // never keep a failure
+  return series;
+}
+
+async function fetchDaily(symbol: string, range: string): Promise<Series> {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d`;
   const data = (await getJson(url)) as ChartResponse;
   const result = data.chart.result?.[0];
@@ -83,6 +97,37 @@ export function quoteBefore(label: string, series: Series, date: string): Quote 
   return quoteFrom(label, series.bars, index);
 }
 
+/**
+ * The change over a span of days (for the weekly brief): the last close from `start` to `end`
+ * against the last close before `start`. Null if there was no session in the span.
+ */
+export function quoteSpan(label: string, series: Series, start: string, end: string): Quote | null {
+  let last = -1;
+  series.bars.forEach((b, i) => {
+    if (b.date >= start && b.date <= end) last = i;
+  });
+  const before = series.bars.findLastIndex((b) => b.date < start);
+  if (last < 0 || before < 0) return null;
+  const close = series.bars[last].close;
+  const prevClose = series.bars[before].close;
+  const change = close - prevClose;
+  return { label, close, prevClose, change, pct: (change / prevClose) * 100, date: series.bars[last].date };
+}
+
+/**
+ * Whether the close on `date` is the highest or lowest of the year before it (the last 250 sessions,
+ * about one trading year). Null when there is no close that day or not enough history to say.
+ */
+export function yearExtreme(series: Series, date: string): 'high' | 'low' | null {
+  const i = series.bars.findIndex((b) => b.date === date);
+  if (i < 120) return null; // under ~6 months of history the comparison means little
+  const prior = series.bars.slice(Math.max(0, i - 250), i).map((b) => b.close);
+  const close = series.bars[i].close;
+  if (close >= Math.max(...prior)) return 'high';
+  if (close <= Math.min(...prior)) return 'low';
+  return null;
+}
+
 /** Runs `fn` over `items`, at most `limit` at a time. Failures become null instead of stopping the rest. */
 export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<(R | null)[]> {
   const out: (R | null)[] = new Array(items.length).fill(null);
@@ -118,7 +163,21 @@ export async function getNifty50(): Promise<Constituent[]> {
     .map((cells) => ({ name: cells[0].replace(/ Ltd\.?$/, '').trim(), symbol: cells[2].trim() }));
 }
 
-export type Headline = { title: string; url: string; published: Date };
+export type Headline = { title: string; url: string; source: string; published: Date };
+
+type Feed = { source: string; url: string };
+
+/** The Economic Times "Stocks" feed: Indian companies and markets (its wider Markets feed mixes in world news). */
+const ET_STOCKS: Feed = { source: 'The Economic Times', url: 'https://economictimes.indiatimes.com/markets/stocks/rssfeeds/2146842.cms' };
+/** Feeds that carry the daily "stocks to watch", trade-setup and outlook stories. */
+const WATCH_FEEDS: Feed[] = [
+  { source: 'Business Standard', url: 'https://www.business-standard.com/rss/markets-106.rss' },
+  { source: 'Mint', url: 'https://www.livemint.com/rss/markets' },
+  ET_STOCKS,
+];
+/** What a "what to watch next" story is called in Indian market news. */
+const WATCH_WORDS =
+  /stocks? to watch|stocks in (the )?news|to watch (today|tomorrow|on)|tomorrow|trade set-?up|market outlook|outlook for|week ahead|next week|stocks? to buy|buy or sell|picks?\b|technical view|f&o|what to expect/i;
 
 const decode = (s: string) =>
   s
@@ -130,30 +189,57 @@ const decode = (s: string) =>
     .replace(/&gt;/g, '>')
     .trim();
 
-/** Market headlines from The Economic Times published in the last `withinHours` hours, newest first. */
-export async function getHeadlines(limit = 5, withinHours = 18): Promise<Headline[]> {
-  // The "Stocks" feed: Indian companies and markets (the wider Markets feed mixes in US and world news).
-  const res = await fetch('https://economictimes.indiatimes.com/markets/stocks/rssfeeds/2146842.cms', {
-    headers: UA,
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(`${res.status} from Economic Times`);
+async function readFeed(feed: Feed): Promise<Headline[]> {
+  const res = await fetch(feed.url, { headers: UA, signal: AbortSignal.timeout(TIMEOUT_MS), cache: 'no-store' });
+  if (!res.ok) throw new Error(`${res.status} from ${feed.source}`);
   const xml = await res.text();
-  const since = Date.now() - withinHours * 3_600_000;
   const items = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
   return items
     .map((item) => ({
       title: decode(item.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? ''),
       url: decode(item.match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? ''),
+      source: feed.source,
       published: new Date(decode(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] ?? '')),
     }))
-    .filter((h) => h.title && h.url.startsWith('https://') && h.published.getTime() >= since)
+    .filter((h) => h.title && h.url.startsWith('https://') && Number.isFinite(h.published.getTime()));
+}
+
+/** Newest first, recent only, and the same story (often repeated as "Live Updates: <headline>") kept once. */
+function pick(headlines: Headline[], limit: number, withinHours: number): Headline[] {
+  const since = Date.now() - withinHours * 3_600_000;
+  const key = (t: string) => t.replace(/^[^:]{0,40}:\s*/, '').toLowerCase();
+  return headlines
+    .filter((h) => h.published.getTime() >= since)
     .sort((a, b) => b.published.getTime() - a.published.getTime())
-    // The feed often repeats a story as "Stock Market Live Updates: <same headline>"; keep it once.
-    .filter((h, i, all) => {
-      const key = (t: string) => t.replace(/^[^:]{0,40}:\s*/, '').toLowerCase();
-      return all.findIndex((other) => key(other.title) === key(h.title)) === i;
+    .filter((h, i, all) => all.findIndex((other) => key(other.title) === key(h.title)) === i)
+    .slice(0, limit);
+}
+
+/** Market headlines from The Economic Times published in the last `withinHours` hours. */
+export async function getHeadlines(limit = 5, withinHours = 18): Promise<Headline[]> {
+  return pick(await readFeed(ET_STOCKS), limit, withinHours);
+}
+
+/**
+ * Stories about what to watch next (stocks to watch, trade setups, outlooks, analyst picks) from
+ * Business Standard, Mint and The Economic Times. A feed that fails is skipped.
+ */
+export async function getWatchNews(limit = 6, withinHours = 20): Promise<Headline[]> {
+  const feeds = await Promise.all(
+    WATCH_FEEDS.map((feed) =>
+      readFeed(feed).catch((error: Error) => {
+        console.warn(`market-data: ${feed.source} skipped: ${error.message}`);
+        return [];
+      }),
+    ),
+  );
+  // At most 3 stories from any one outlet, so a busy feed cannot crowd out the others.
+  const perSource = new Map<string, number>();
+  return pick(feeds.flat().filter((h) => WATCH_WORDS.test(h.title)), 50, withinHours)
+    .filter((h) => {
+      const n = (perSource.get(h.source) ?? 0) + 1;
+      perSource.set(h.source, n);
+      return n <= 3;
     })
     .slice(0, limit);
 }

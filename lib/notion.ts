@@ -22,9 +22,26 @@ export const STATUS_PROPERTY = 'Status'; // a "Status" column
 export const DATE_PROPERTY = 'date'; // a "Date" column
 export const PUBLISHED = 'Published'; // the Status option that means "show this one"
 
+// Written by lib/market-brief.ts; the website reads them for the article cards.
+export const SUMMARY_PROPERTY = 'Summary'; // text: the brief's one-line summary
+export const NIFTY_PROPERTY = 'Nifty %'; // number: Nifty 50's change that day (or week)
+export const WATCHLIST_PROPERTY = 'Watchlist'; // text: one line per item, news linked to its source
+
+export const DAILY_PREFIX = 'YGL Daily Market Brief – '; // en dash, as in the existing pages
+export const WEEKLY_PREFIX = 'YGL Weekly Market Strategy – ';
+
+/** daily and weekly are the automatic briefs (told apart by title); anything else you write is "other". */
+export type ArticleKind = 'daily' | 'weekly' | 'other';
+
+export type WatchItem = { text: string; href: string | null };
+
 export type Article = {
   id: string;
   title: string;
+  kind: ArticleKind;
+  summary: string | null;
+  niftyPct: number | null;
+  watchlist: WatchItem[];
   /** The date column, "2026-10-20" or "2026-10-20T09:30:00.000+05:30". When it is empty, the date in the title. */
   date: string | null;
   /** The page's public Notion address. Null unless the page is shared to the web (Share, then Publish). */
@@ -121,14 +138,45 @@ export async function getArticle(id: string): Promise<ArticleWithContent | null>
 function toArticle(page: PageObjectResponse): Article {
   let title = '';
   let date: string | null = null;
+  let summary: string | null = null;
+  let niftyPct: number | null = null;
+  let watchlist: WatchItem[] = [];
 
   for (const [name, property] of Object.entries(page.properties)) {
     // The title column is found by its type, so it works whatever you named it.
     if (property.type === 'title') title = property.title.map((part) => part.plain_text).join('');
     if (name === DATE_PROPERTY && property.type === 'date') date = property.date?.start ?? null;
+    if (name === SUMMARY_PROPERTY && property.type === 'rich_text') {
+      summary = property.rich_text.map((t) => t.plain_text).join('').trim() || null;
+    }
+    if (name === NIFTY_PROPERTY && property.type === 'number') niftyPct = property.number;
+    if (name === WATCHLIST_PROPERTY && property.type === 'rich_text') watchlist = toWatchItems(property.rich_text);
   }
+  title = title.trim();
   // The daily briefs carry their day in the title ("YGL Daily Market Brief – 2026-10-30").
   date ??= title.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? null;
+  const kind: ArticleKind = title.startsWith(DAILY_PREFIX) ? 'daily' : title.startsWith(WEEKLY_PREFIX) ? 'weekly' : 'other';
 
-  return { id: page.id, title: title.trim() || 'Untitled', date, url: page.public_url };
+  return { id: page.id, title: title || 'Untitled', kind, summary, niftyPct, watchlist, date, url: page.public_url };
+}
+
+/** The Watchlist column holds one item per line; a linked piece of text gives the item its link. */
+function toWatchItems(parts: { plain_text: string; href: string | null }[]): WatchItem[] {
+  const items: WatchItem[] = [];
+  let current: WatchItem = { text: '', href: null };
+  for (const part of parts) {
+    const lines = part.plain_text.split('\n');
+    lines.forEach((line, i) => {
+      if (i > 0) {
+        items.push(current);
+        current = { text: '', href: null };
+      }
+      current.text += line;
+      if (part.href && line.trim()) current.href ??= part.href;
+    });
+  }
+  items.push(current);
+  return items
+    .map((item) => ({ text: item.text.trim(), href: item.href?.startsWith('https://') ? item.href : null }))
+    .filter((item) => item.text);
 }

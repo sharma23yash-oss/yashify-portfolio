@@ -2,9 +2,9 @@
 
 import { useId, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Check, Copy, Mail, Newspaper } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Binoculars, CalendarRange, Check, Copy, Mail, Newspaper, type LucideIcon } from 'lucide-react';
 import { Chip, ExternalAnchor, Reveal, SectionHeading, SpotCard } from '@/components/ui/primitives';
-import { BTN_PRIMARY, BTN_SECONDARY, CARD, FIELD, FOCUS, ICON_TILE, cn } from '@/components/ui/tokens';
+import { BTN_PRIMARY, BTN_SECONDARY, CARD, FIELD, FOCUS, FOCUS_ON_DARK, ICON_TILE, RULE_STYLE, cn } from '@/components/ui/tokens';
 import { copySuffix, useCopy } from './copy';
 
 export type Newsletter = {
@@ -220,6 +220,89 @@ function NewsletterCard({
   );
 }
 
+/** Each tile opens one tab of the articles page (components/newsletter/NewsletterTabs.tsx). */
+const ARTICLE_TABS: { href: string; icon: LucideIcon; title: string; text: string }[] = [
+  { href: '/newsletters#daily', icon: Newspaper, title: 'Daily briefs', text: 'Pre-market and closing numbers for every trading day.' },
+  { href: '/newsletters#weekly', icon: CalendarRange, title: 'Weekly updates', text: "Every Friday: the week in review and next week's watchlist." },
+  { href: '/newsletters#watch', icon: Binoculars, title: 'Stocks to watch', text: 'News and 52-week highs and lows to check before the next session.' },
+];
+
+/** The large "Read the latest articles" block: a navy feature with a drawn chart and three ways in. */
+function ArticlesFeature() {
+  return (
+    <section
+      aria-labelledby="latest-articles-heading"
+      className="relative isolate mt-12 overflow-hidden rounded-[2rem] bg-[#0B1F3A] px-6 py-10 text-white shadow-[0_40px_80px_-40px_rgba(11,31,58,0.8)] sm:px-10 sm:py-14"
+    >
+      {/* Decoration only: a glow, a faint grid and a rising price line. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_90%_0%,rgba(20,184,166,0.4),transparent_50%),radial-gradient(circle_at_0%_100%,rgba(52,211,153,0.2),transparent_45%)]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:40px_40px]"
+      />
+      <svg aria-hidden="true" viewBox="0 0 600 200" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-40 w-full sm:h-56">
+        <defs>
+          <linearGradient id="articles-area" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#14B8A6" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#14B8A6" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d="M0 170 L60 150 L110 160 L170 120 L230 132 L290 95 L350 105 L410 70 L470 82 L530 40 L600 30 L600 200 L0 200 Z" fill="url(#articles-area)" />
+        <path d="M0 170 L60 150 L110 160 L170 120 L230 132 L290 95 L350 105 L410 70 L470 82 L530 40 L600 30" fill="none" stroke="#34D399" strokeWidth="2" strokeOpacity="0.7" />
+      </svg>
+
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-xl">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-teal-200">
+            <span className="h-px w-8" style={RULE_STYLE} aria-hidden="true" />
+            YGL market briefs
+          </p>
+          <h3 id="latest-articles-heading" className="mt-4 text-balance font-serif text-3xl font-semibold leading-tight sm:text-5xl">
+            Read the latest articles
+          </h3>
+          <p className="mt-4 text-pretty leading-relaxed text-slate-200">
+            Indian markets in numbers, written up after every session: indices, sectors, the biggest Nifty 50 moves and what
+            to watch next. Updated every weekday.
+          </p>
+        </div>
+        <Link
+          href="/newsletters"
+          className={cn(
+            'group inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#0B1F3A] shadow-[0_12px_30px_-12px_rgba(0,0,0,0.5)] transition-colors hover:bg-teal-50 lg:self-auto',
+            FOCUS_ON_DARK,
+          )}
+        >
+          Open all articles
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none" aria-hidden="true" />
+        </Link>
+      </div>
+
+      <ul role="list" className="mt-10 grid gap-4 sm:grid-cols-3">
+        {ARTICLE_TABS.map(({ href, icon: Icon, title, text }) => (
+          <li key={href}>
+            <Link
+              href={href}
+              className={cn(
+                'group flex h-full flex-col rounded-2xl border border-white/15 bg-white/[0.06] p-5 backdrop-blur-sm transition duration-200 hover:-translate-y-1 hover:border-teal-300/50 hover:bg-white/[0.1] motion-reduce:transform-none',
+                FOCUS_ON_DARK,
+              )}
+            >
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal-400 to-emerald-400 text-[#0B1F3A] shadow-[0_10px_24px_-10px_rgba(20,184,166,0.8)]">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="mt-4 flex items-center gap-1.5 text-lg font-semibold">
+                {title}
+                <ArrowRight className="h-4 w-4 opacity-60 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100" aria-hidden="true" />
+              </span>
+              <span className="mt-1.5 text-sm leading-relaxed text-slate-300">{text}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function NewsletterPanel({ content }: { content: NewsletterContent }) {
   const { state, copy } = useCopy();
   const endpoint = usableEndpoint(content.endpoint);
@@ -248,12 +331,7 @@ export function NewsletterPanel({ content }: { content: NewsletterContent }) {
             </Reveal>
           ))}
         </div>
-<div className="mt-10 text-center">
-  <Link href="/newsletters" className={cn(BTN_SECONDARY, 'px-6 py-3', FOCUS)}>
-    Read the latest articles
-    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-  </Link>
-</div>
+        <ArticlesFeature />
         {endpoint ? <EmailSignup endpoint={endpoint} /> : null}
 
         <p role="status" aria-live="polite" className="sr-only">

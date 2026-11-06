@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CARD, FOCUS, cn } from '@/components/ui/tokens';
+import { NewsletterTabs } from '@/components/newsletter/NewsletterTabs';
+import { FOCUS, cn } from '@/components/ui/tokens';
 import { getPublishedArticles, type Article } from '@/lib/notion';
 
 // Next.js rebuilds this page in the background at most once a minute. A new article shows up
@@ -9,53 +10,9 @@ export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Newsletters · Yash Sharma',
-  description: 'Latest newsletter articles by Yash Sharma.',
+  description: 'Daily Indian market briefs, weekly updates and stocks to watch, by Yash Sharma.',
   alternates: { canonical: '/newsletters' },
 };
-
-/** "2026-10-20" or "2026-10-20T09:30:00.000+05:30" becomes { day: "2026-10-20", label: "20 Oct 2026" }. */
-function describeDate(iso: string | null) {
-  if (!iso) return null;
-  const day = iso.slice(0, 10); // the calendar day exactly as written in Notion
-  const parsed = new Date(`${day}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime())) return null;
-  const label = new Intl.DateTimeFormat('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(parsed);
-  return { day, label };
-}
-
-function ArticleList({ articles }: { articles: Article[] }) {
-  return (
-    <ul role="list" aria-label="Published articles" className={cn(CARD, 'mt-10 divide-y divide-slate-200 overflow-hidden')}>
-      {articles.map((article) => {
-        const date = describeDate(article.date);
-        return (
-          <li key={article.id} className="flex flex-col gap-1 px-5 py-5 sm:flex-row sm:items-baseline sm:gap-8 sm:px-7">
-            <span className="shrink-0 text-sm font-medium tabular-nums text-slate-600 sm:w-28">
-              {date ? <time dateTime={date.day}>{date.label}</time> : null}
-            </span>
-            <h2 className="text-lg font-semibold leading-snug text-[#0B1F3A]">
-              {/* Each article opens on this site (app/newsletters/[id]), so Notion pages need no "Publish to web". */}
-              <Link
-                href={`/newsletters/${article.id}`}
-                className={cn(
-                  'rounded-sm underline decoration-slate-300 decoration-2 underline-offset-4 transition-colors hover:decoration-[#0B1F3A]',
-                  FOCUS,
-                )}
-              >
-                {article.title}
-              </Link>
-            </h2>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
 
 export default async function NewslettersPage() {
   let articles: Article[] = [];
@@ -69,7 +26,7 @@ export default async function NewslettersPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-14 sm:px-6 sm:py-20">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-14 sm:px-6 sm:py-20">
       <Link
         href="/#newsletters"
         className={cn('inline-flex rounded-sm text-sm font-semibold text-[#0B1F3A] underline-offset-4 hover:underline', FOCUS)}
@@ -80,6 +37,10 @@ export default async function NewslettersPage() {
 
       <p className="mt-10 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">Newsletters</p>
       <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-[#0B1F3A] sm:text-5xl">Latest articles</h1>
+      <p className="mt-4 max-w-2xl text-pretty leading-relaxed text-slate-700">
+        The YGL market briefs: every trading day&apos;s numbers, a weekly review each Friday, and the news worth a look before
+        the next session. Compiled from market data; not investment advice.
+      </p>
 
       {error ? (
         <div className="mt-10 rounded-2xl border border-slate-200 bg-white px-5 py-5 text-slate-700">
@@ -92,7 +53,7 @@ export default async function NewslettersPage() {
       ) : articles.length === 0 ? (
         <p className="mt-10 text-slate-700">No articles have been published yet.</p>
       ) : (
-        <ArticleList articles={articles} />
+        <NewsletterTabs articles={articles} />
       )}
     </main>
   );
