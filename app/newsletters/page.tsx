@@ -39,22 +39,16 @@ function ArticleList({ articles }: { articles: Article[] }) {
               {date ? <time dateTime={date.day}>{date.label}</time> : null}
             </span>
             <h2 className="text-lg font-semibold leading-snug text-[#0B1F3A]">
-              {article.url ? (
-                <a
-                  href={article.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    'rounded-sm underline decoration-slate-300 decoration-2 underline-offset-4 transition-colors hover:decoration-[#0B1F3A]',
-                    FOCUS,
-                  )}
-                >
-                  {article.title}
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              ) : (
-                article.title
-              )}
+              {/* Each article opens on this site (app/newsletters/[id]), so Notion pages need no "Publish to web". */}
+              <Link
+                href={`/newsletters/${article.id}`}
+                className={cn(
+                  'rounded-sm underline decoration-slate-300 decoration-2 underline-offset-4 transition-colors hover:decoration-[#0B1F3A]',
+                  FOCUS,
+                )}
+              >
+                {article.title}
+              </Link>
             </h2>
           </li>
         );

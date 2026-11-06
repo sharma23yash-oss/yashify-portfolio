@@ -2,8 +2,10 @@ import {
   Client,
   collectPaginatedAPI,
   extractDatabaseId,
+  isFullBlock,
   isFullDatabase,
   isFullPage,
+  type BlockObjectResponse,
   type PageObjectResponse,
 } from '@notionhq/client';
 
@@ -14,18 +16,24 @@ import {
  */
 
 // These must match your Notion database exactly, including capital letters.
-const STATUS_PROPERTY = 'Status'; // a "Select" column
-const DATE_PROPERTY = 'date'; // a "Date" column
-const PUBLISHED = 'Published'; // the Status option that means "show this one"
+// lib/market-brief.ts uses the same three when it writes the daily brief.
+export const STATUS_PROPERTY = 'Status'; // a "Status" column
+export const DATE_PROPERTY = 'date'; // a "Date" column
+export const PUBLISHED = 'Published'; // the Status option that means "show this one"
 
 export type Article = {
   id: string;
   title: string;
-  /** What the date column holds, "2026-10-20" or "2026-10-20T09:30:00.000+05:30". Null when it is empty. */
+  /** The date column, "2026-10-20" or "2026-10-20T09:30:00.000+05:30". When it is empty, the date in the title. */
   date: string | null;
   /** The page's public Notion address. Null unless the page is shared to the web (Share, then Publish). */
   url: string | null;
 };
+
+/** A block, plus the rows of a table (the only children this site shows). */
+export type ArticleBlock = BlockObjectResponse & { rows?: BlockObjectResponse[] };
+
+export type ArticleWithContent = Article & { blocks: ArticleBlock[] };
 
 const notion = new Client({
   auth: process.env.NOTION_TOKEN,
@@ -35,7 +43,7 @@ const notion = new Client({
   retry: false,
 });
 
-export async function getPublishedArticles(): Promise<Article[]> {
+async function dataSourceId(): Promise<string> {
   const databaseId = process.env.NOTION_DATABASE_ID;
   if (!process.env.NOTION_TOKEN || !databaseId) {
     throw new Error('NOTION_TOKEN or NOTION_DATABASE_ID is missing. Add both to .env.local, then restart npm run dev.');
@@ -48,16 +56,60 @@ export async function getPublishedArticles(): Promise<Article[]> {
   if (!isFullDatabase(database) || database.data_sources.length === 0) {
     throw new Error('Notion did not return the database. Open it in Notion, click the "..." menu, choose Connections and add your integration.');
   }
+  return database.data_sources[0].id;
+}
 
+export async function getPublishedArticles(): Promise<Article[]> {
   const pages = await collectPaginatedAPI(notion.dataSources.query, {
-    data_source_id: database.data_sources[0].id,
+    data_source_id: await dataSourceId(),
     // Notion applies this filter itself, so rows that are not Published never reach this site.
-    // (If Status is Notion's own "Status" property type rather than "Select", write status instead of select.)
     filter: { property: STATUS_PROPERTY, status: { equals: PUBLISHED } },
     sorts: [{ property: DATE_PROPERTY, direction: 'descending' }], // newest first
   });
 
-  return pages.filter(isFullPage).map(toArticle);
+  // Sorted again here, because a row with an empty date column gets its date from the title.
+  return pages
+    .filter(isFullPage)
+    .map(toArticle)
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+}
+
+const NOTION_ID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
+const normalise = (id: string) => id.replace(/-/g, '').toLowerCase();
+
+/**
+ * One article with its content, or null. Only pages that live in the articles database and are
+ * Published are returned, so the address /newsletters/<id> can never show any other Notion page.
+ */
+export async function getArticle(id: string): Promise<ArticleWithContent | null> {
+  if (!NOTION_ID.test(id)) return null;
+
+  let page;
+  try {
+    page = await notion.pages.retrieve({ page_id: id });
+  } catch {
+    return null; // not found, or not shared with the integration
+  }
+  if (!isFullPage(page) || page.in_trash || page.archived) return null;
+
+  const parent = page.parent;
+  const source = await dataSourceId();
+  if (parent.type !== 'data_source_id' || normalise(parent.data_source_id) !== normalise(source)) return null;
+
+  const status = page.properties[STATUS_PROPERTY];
+  const statusName = status?.type === 'status' ? status.status?.name : status?.type === 'select' ? status.select?.name : null;
+  if (statusName !== PUBLISHED) return null;
+
+  const blocks = (await collectPaginatedAPI(notion.blocks.children.list, { block_id: page.id })).filter(isFullBlock);
+  const withRows: ArticleBlock[] = await Promise.all(
+    blocks.map(async (block) => {
+      if (block.type !== 'table') return block;
+      const rows = (await collectPaginatedAPI(notion.blocks.children.list, { block_id: block.id })).filter(isFullBlock);
+      return { ...block, rows };
+    }),
+  );
+
+  return { ...toArticle(page), blocks: withRows };
 }
 
 function toArticle(page: PageObjectResponse): Article {
@@ -69,6 +121,8 @@ function toArticle(page: PageObjectResponse): Article {
     if (property.type === 'title') title = property.title.map((part) => part.plain_text).join('');
     if (name === DATE_PROPERTY && property.type === 'date') date = property.date?.start ?? null;
   }
+  // The daily briefs carry their day in the title ("YGL Daily Market Brief – 2026-10-30").
+  date ??= title.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? null;
 
   return { id: page.id, title: title.trim() || 'Untitled', date, url: page.public_url };
 }
