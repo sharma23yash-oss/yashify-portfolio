@@ -5,8 +5,8 @@
 /**
  * Welcome screen  ·  app/page.tsx  ·  Next.js App Router
  *
- * Five tabs     Portfolio · Google Drive · YouTube · Newsletters · Yashify AI
- *               A tab is a URL fragment (/#drive  /#youtube  /#newsletters  /#ai); the plain page is the
+ * Four tabs     Portfolio · YouTube · YGL Market Briefs · Yashify AI
+ *               A tab is a URL fragment (/#youtube  /#newsletters  /#ai); the plain page is the
  *               Portfolio. components/tabs/ holds the tab bar and its small router (TabBar.tsx, view.ts)
  *               and one panel per tab. Everything the Portfolio shows is still in this file.
  *
@@ -20,7 +20,7 @@
  *           public/logos/rbi.png · aiggpa.png · indian-railways.png (official logos;
  *           .svg / .webp / .jpg also work. Until a file exists a neutral icon shows.)
  * Content   edit the CONTENT block below: SITE, EDUCATION, INTERNSHIPS, PROJECTS ... for the Portfolio,
- *           and DRIVE, YOUTUBE and NEWSLETTERS for the other tabs. Every array and constant in this
+ *           and YOUTUBE and NEWSLETTERS for the other tabs. Every array and constant in this
  *           file lives at module scope, above the components, so nothing is declared inside JSX.
  * E-mail    optional: set NEXT_PUBLIC_NEWSLETTER_ENDPOINT in .env.local to turn on the sign-up box
  *           of the Newsletters tab (see components/tabs/NewsletterPanel.tsx).
@@ -82,7 +82,6 @@ import {
 import { EquityResearchHero, HERO_ITEM } from '@/components/hero/EquityResearchHero';
 import { TabBar, TabPanel } from '@/components/tabs/TabBar';
 import { goToView, useView, useViewEffects, type ViewId } from '@/components/tabs/view';
-import { DrivePanel, type DriveContent } from '@/components/tabs/DrivePanel';
 import { YouTubePanel, type YouTubeContent } from '@/components/tabs/YouTubePanel';
 import { NewsletterPanel, type NewsletterContent } from '@/components/tabs/NewsletterPanel';
 import { AiPanel } from '@/components/tabs/AiPanel';
@@ -99,21 +98,6 @@ const SITE = {
   resumeDownloadName: 'Yash-Sharma-Resume.pdf',
 };
 
-/* ---- Google Drive tab ------------------------------------------------------------------------
- * Only files that are meant to be public belong here. In Drive: right-click the file, Share, General
- * access, "Anyone with the link", Copy link. `kind` is one of: pdf, doc, sheet, slides, video, folder, other. */
-const DRIVE: DriveContent = {
-  folderUrl: '', // optional: a shared Drive folder, adds an "Open the Drive folder" button
-  files: [
-    // {
-    //   title: 'Name of the file',
-    //   description: 'One line about it.',
-    //   kind: 'pdf',
-    //   href: 'https://drive.google.com/file/d/FILE_ID/view?usp=sharing',
-    // },
-  ],
-};
-
 /* ---- YouTube tab -----------------------------------------------------------------------------
  * The welcome line is the large Brush Script MT heading of the tab. Videos are optional: either set
  * channelId (it starts with UC; YouTube Studio > Settings > Channel > Advanced settings) for a
@@ -127,25 +111,11 @@ const YOUTUBE: YouTubeContent = {
   ],
 };
 
-/* ---- Newsletters tab -------------------------------------------------------------------------
+/* ---- YGL Market Briefs tab (#newsletters) -------------------------------------------------------------------------
  * Each item is a card with a subscribe button. The e-mail box under the cards only appears when
  * NEXT_PUBLIC_NEWSLETTER_ENDPOINT is set (an https address that accepts a form POST with an `email` field). */
 const NEWSLETTERS: NewsletterContent = {
-  items: [
-    {
-      name: 'YGL Pulse',
-      platform: 'LinkedIn newsletter',
-      cta: 'Subscribe on LinkedIn',
-      blurb: 'Equity, company and macroeconomic research, with a focus on Indian markets.',
-      topics: [
-        'Indian stock markets',
-        'Ratio and financial analysis',
-        'Learning the stock market',
-        'AI in Indian finance',
-      ],
-      href: 'https://www.linkedin.com/newsletters/ygl-pulse-7485210121896206336/',
-    },
-  ],
+  items: [], // subscribe cards; empty, so the tab shows only the market briefs
   endpoint: process.env.NEXT_PUBLIC_NEWSLETTER_ENDPOINT || undefined,
 };
 
@@ -1896,9 +1866,6 @@ export default function Page() {
             <ProjectsSection />
             <AchievementsSection />
             <ContactBand onContact={openContact} />
-          </TabPanel>
-          <TabPanel id="drive" active={view === 'drive'}>
-            <DrivePanel content={DRIVE} />
           </TabPanel>
           <TabPanel id="youtube" active={view === 'youtube'}>
             <YouTubePanel content={YOUTUBE} />

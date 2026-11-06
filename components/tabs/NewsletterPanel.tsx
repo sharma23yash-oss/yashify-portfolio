@@ -255,14 +255,14 @@ function ArticlesFeature() {
         <div className="max-w-xl">
           <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-teal-200">
             <span className="h-px w-8" style={RULE_STYLE} aria-hidden="true" />
-            YGL market briefs
+            Updated every weekday
           </p>
           <h3 id="latest-articles-heading" className="mt-4 text-balance font-serif text-3xl font-semibold leading-tight sm:text-5xl">
             Read the latest articles
           </h3>
           <p className="mt-4 text-pretty leading-relaxed text-slate-200">
             Indian markets in numbers, written up after every session: indices, sectors, the biggest Nifty 50 moves and what
-            to watch next. Updated every weekday.
+            to watch next.
           </p>
         </div>
         <Link
@@ -314,23 +314,26 @@ export function NewsletterPanel({ content }: { content: NewsletterContent }) {
         <SectionHeading
           level={1}
           id="newsletters-title"
-          eyebrow="Newsletters"
-          title="Stay in the loop"
-          blurb="Subscribe to get new editions as soon as they are published."
+          eyebrow="YGL Market Briefs"
+          title="Indian markets, every trading day"
+          blurb="Daily briefs, a weekly review each Friday and the stocks worth a look before the next session."
         />
 
-        <div className={cn('mt-12 grid gap-6', items.length > 1 ? 'sm:grid-cols-2' : 'mx-auto max-w-2xl')}>
-          {items.map((item, index) => (
-            <Reveal key={item.href} delay={Math.min(index, 3) * 0.1} className="h-full">
-              <NewsletterCard
-                item={item}
-                copied={state?.key === item.href && state.ok}
-                failed={state?.key === item.href && !state.ok}
-                onCopy={() => void copy(item.href, item.href)}
-              />
-            </Reveal>
-          ))}
-        </div>
+        {/* Subscribe cards, shown only when NEWSLETTERS in app/page.tsx lists some. */}
+        {items.length ? (
+          <div className={cn('mt-12 grid gap-6', items.length > 1 ? 'sm:grid-cols-2' : 'mx-auto max-w-2xl')}>
+            {items.map((item, index) => (
+              <Reveal key={item.href} delay={Math.min(index, 3) * 0.1} className="h-full">
+                <NewsletterCard
+                  item={item}
+                  copied={state?.key === item.href && state.ok}
+                  failed={state?.key === item.href && !state.ok}
+                  onCopy={() => void copy(item.href, item.href)}
+                />
+              </Reveal>
+            ))}
+          </div>
+        ) : null}
         <ArticlesFeature />
         {endpoint ? <EmailSignup endpoint={endpoint} /> : null}
 

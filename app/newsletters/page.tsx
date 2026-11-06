@@ -9,7 +9,7 @@ import { getPublishedArticles, type Article } from '@/lib/notion';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Newsletters · Yash Sharma',
+  title: 'YGL Market Briefs · Yash Sharma',
   description: 'Daily Indian market briefs, weekly updates and stocks to watch, by Yash Sharma.',
   alternates: { canonical: '/newsletters' },
 };
@@ -35,7 +35,7 @@ export default async function NewslettersPage() {
         Back to portfolio
       </Link>
 
-      <p className="mt-10 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">Newsletters</p>
+      <p className="mt-10 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">YGL Market Briefs</p>
       <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-[#0B1F3A] sm:text-5xl">Latest articles</h1>
       <p className="mt-4 max-w-2xl text-pretty leading-relaxed text-slate-700">
         The YGL market briefs: every trading day&apos;s numbers, a weekly review each Friday, and the news worth a look before

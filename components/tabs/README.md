@@ -1,8 +1,8 @@
 # The five tabs
 
-`app/page.tsx` shows five tabs: **Portfolio · Google Drive · YouTube · Newsletters · Yashify AI**.
+`app/page.tsx` shows four tabs: **Portfolio · YouTube · YGL Market Briefs · Yashify AI**.
 
-A tab is a URL fragment: `/#drive`, `/#youtube`, `/#newsletters`, `/#ai`. The plain page (and any other
+A tab is a URL fragment: `/#youtube`, `/#newsletters`, `/#ai`. The plain page (and any other
 fragment, such as `/#projects`) is the Portfolio, so every older link keeps working. Back and forward move
 between tabs, and a link to a tab can be shared.
 
@@ -10,31 +10,14 @@ between tabs, and a link to a tab can be shared.
 | --- | --- |
 | `view.ts` | the list of tabs and the small router (`useView`, `goToView`) |
 | `TabBar.tsx` | the tab bar in the header, and `TabPanel` (the Portfolio stays mounted; the other tabs are built when opened) |
-| `DrivePanel.tsx` | the Google Drive tab |
 | `YouTubePanel.tsx` | the YouTube tab, with the Brush Script MT welcome heading |
-| `NewsletterPanel.tsx` | the Newsletters tab and its optional e-mail box |
+| `NewsletterPanel.tsx` | the YGL Market Briefs tab (`/#newsletters`) and its optional e-mail box |
 | `AiPanel.tsx`, `ai-tools.ts` | the Yashify AI tab and the list of AI tools it shows |
 | `copy.ts` | the "copy to the clipboard" helper |
 
 ## What to edit
 
 The content of the tabs sits near the top of `app/page.tsx`, below `SITE`.
-
-### Google Drive: `DRIVE`
-
-Add one entry per file you want to share. Only files that are meant to be public belong here.
-
-1. In Google Drive, right-click the file, choose **Share**, then under **General access** choose
-   **Anyone with the link**, and **Copy link**.
-2. Paste it as `href`. `kind` is one of `pdf`, `doc`, `sheet`, `slides`, `video`, `folder`, `other`.
-
-```ts
-files: [
-  { title: 'Market brief', description: 'One line about it.', kind: 'pdf', href: 'https://drive.google.com/file/d/…/view?usp=sharing' },
-],
-```
-
-`folderUrl` is optional: a shared folder adds an "Open the Drive folder" button.
 
 ### YouTube: `YOUTUBE`
 

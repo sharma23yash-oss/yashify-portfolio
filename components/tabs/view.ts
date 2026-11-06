@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
-import { Briefcase, FolderOpen, MonitorPlay, Newspaper, Sparkles, type LucideIcon } from 'lucide-react';
+import { Briefcase, MonitorPlay, Newspaper, Sparkles, type LucideIcon } from 'lucide-react';
 
 /**
- * The five top-level tabs of the welcome screen, and the small router behind them.
+ * The four top-level tabs of the welcome screen, and the small router behind them.
  *
- * A tab is a URL fragment: /#drive  /#youtube  /#newsletters  /#ai. The Portfolio tab is the plain
+ * A tab is a URL fragment: /#youtube  /#newsletters  /#ai. The Portfolio tab is the plain
  * page, and any other fragment (for example /#projects) also means "Portfolio", so every older
  * link keeps working. Back and forward move between tabs, and a link to a tab can be shared.
  */
 
-export type ViewId = 'portfolio' | 'drive' | 'youtube' | 'newsletters' | 'ai';
+export type ViewId = 'portfolio' | 'youtube' | 'newsletters' | 'ai';
 
 export type ViewItem = {
   id: ViewId;
@@ -21,9 +21,8 @@ export type ViewItem = {
 
 export const VIEWS: readonly ViewItem[] = [
   { id: 'portfolio', label: 'Portfolio', hash: '', Icon: Briefcase },
-  { id: 'drive', label: 'Google Drive', hash: 'drive', Icon: FolderOpen },
   { id: 'youtube', label: 'YouTube', hash: 'youtube', Icon: MonitorPlay },
-  { id: 'newsletters', label: 'Newsletters', hash: 'newsletters', Icon: Newspaper },
+  { id: 'newsletters', label: 'YGL Market Briefs', hash: 'newsletters', Icon: Newspaper },
   { id: 'ai', label: 'Yashify AI', hash: 'ai', Icon: Sparkles },
 ];
 

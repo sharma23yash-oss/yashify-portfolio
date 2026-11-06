@@ -63,7 +63,7 @@ const CONTENT = {
         'Self-initiated research across banking, pharma and mutual funds',
       ],
       chips: ['Screener.in', 'CMIE Prowess', 'Annual reports'],
-      // the same address as the YGL Pulse card in NEWSLETTERS (app/page.tsx)
+      // YGL Pulse on LinkedIn
       action: {
         label: 'Read YGL Pulse',
         href: 'https://www.linkedin.com/newsletters/ygl-pulse-7485210121896206336/',

@@ -64,7 +64,7 @@ export default async function ArticlePage({ params }: Props) {
 
       <article className="mt-10">
         <header className="border-b border-slate-200 pb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">YGL Pulse</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">YGL Market Briefs</p>
           <h1 className="mt-3 text-balance font-serif text-3xl font-semibold tracking-tight text-[#0B1F3A] sm:text-4xl">
             {article.title}
           </h1>
