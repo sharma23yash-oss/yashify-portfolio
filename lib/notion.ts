@@ -1,4 +1,5 @@
 import {
+  APIResponseError,
   Client,
   collectPaginatedAPI,
   extractDatabaseId,
@@ -87,8 +88,13 @@ export async function getArticle(id: string): Promise<ArticleWithContent | null>
   let page;
   try {
     page = await notion.pages.retrieve({ page_id: id });
-  } catch {
-    return null; // not found, or not shared with the integration
+  } catch (error) {
+    // Only "no such page" means the article does not exist. Anything else (Notion busy, rate
+    // limited, offline) is thrown, so the visitor sees an error that is not cached as a 404.
+    if (APIResponseError.isAPIResponseError(error) && ['object_not_found', 'validation_error'].includes(error.code)) {
+      return null;
+    }
+    throw error;
   }
   if (!isFullPage(page) || page.in_trash || page.archived) return null;
 
