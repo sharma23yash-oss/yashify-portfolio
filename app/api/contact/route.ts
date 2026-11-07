@@ -44,6 +44,7 @@ function sameOrigin(request: NextRequest): boolean {
   }
 }
 
+/** Logs never include the token or the secret, only Cloudflare's error codes. */
 async function verifyTurnstile(token: string, secret: string, ip: string): Promise<boolean> {
   const form = new URLSearchParams({ secret, response: token });
   if (ip !== 'unknown') form.set('remoteip', ip);
@@ -53,11 +54,31 @@ async function verifyTurnstile(token: string, secret: string, ip: string): Promi
       body: form,
       signal: AbortSignal.timeout(8000),
     });
-    const data = (await res.json()) as { success?: boolean };
-    return data.success === true;
-  } catch {
+    const data = (await res.json()) as { success?: boolean; 'error-codes'?: string[] };
+    if (data.success === true) return true;
+    // e.g. invalid-input-secret (wrong key), timeout-or-duplicate (token reused or expired)
+    console.error(
+      `Contact form: Turnstile check failed (HTTP ${res.status}; error-codes: ${(data['error-codes'] ?? []).join(', ') || 'none'}).`,
+    );
+    return false;
+  } catch (error) {
+    console.error(`Contact form: could not reach Turnstile (${errorText(error)}).`);
     return false;
   }
+}
+
+/** Name and message of a thrown error, with any email address hidden. */
+function errorText(error: unknown): string {
+  const text = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  return hideEmails(text);
+}
+
+/** Resend's messages can echo an address (the sender's address is part of the brief), so hide them. */
+const hideEmails = (text: string) => text.replace(/[^\s<>()"'`,;:]+@[^\s<>()"'`,;:]+/g, '[email]');
+
+/** Name, message and status code of a Resend error, for the logs. */
+function resendErrorText(error: { name: string; message: string; statusCode: number | null }): string {
+  return `${error.name}, status ${error.statusCode ?? 'unknown'}: ${hideEmails(error.message)}`;
 }
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -176,34 +197,49 @@ export async function POST(request: NextRequest) {
 
   const resend = new Resend(RESEND_API_KEY);
 
+  const notSent = () =>
+    reply({ ok: false, error: `Sorry, your brief could not be sent. Please try again, or email ${SITE.email}.` }, 502);
+
+  // Logs carry only Resend's error details or the email ID, never the brief itself.
   const toOwner = ownerEmail(brief);
-  const sent = await resend.emails.send({
-    from: CONTACT_FROM_EMAIL,
-    to: CONTACT_TO_EMAIL,
-    replyTo: brief.email,
-    subject: toOwner.subject,
-    text: toOwner.text,
-    html: toOwner.html,
-  });
-  if (sent.error) {
-    console.error(`Contact form: Resend rejected the brief email (${sent.error.name}).`);
-    return reply(
-      { ok: false, error: `Sorry, your brief could not be sent. Please try again, or email ${SITE.email}.` },
-      502,
-    );
+  try {
+    const sent = await resend.emails.send({
+      from: CONTACT_FROM_EMAIL,
+      to: CONTACT_TO_EMAIL,
+      replyTo: brief.email,
+      subject: toOwner.subject,
+      text: toOwner.text,
+      html: toOwner.html,
+    });
+    if (sent.error) {
+      console.error(`Contact form: Resend rejected the brief email (${resendErrorText(sent.error)}).`);
+      return notSent();
+    }
+    console.info(`Contact form: brief email sent (id ${sent.data.id}).`);
+  } catch (error) {
+    console.error(`Contact form: the brief email threw (${errorText(error)}).`);
+    return notSent();
   }
 
   // The brief reached you; a failed confirmation shouldn't turn that into an error for the sender.
   const toSender = autoReply(brief);
-  const confirmed = await resend.emails.send({
-    from: CONTACT_FROM_EMAIL,
-    to: brief.email,
-    replyTo: CONTACT_TO_EMAIL,
-    subject: toSender.subject,
-    text: toSender.text,
-    html: toSender.html,
-  });
-  if (confirmed.error) console.error(`Contact form: the confirmation email failed (${confirmed.error.name}).`);
+  try {
+    const confirmed = await resend.emails.send({
+      from: CONTACT_FROM_EMAIL,
+      to: brief.email,
+      replyTo: CONTACT_TO_EMAIL,
+      subject: toSender.subject,
+      text: toSender.text,
+      html: toSender.html,
+    });
+    if (confirmed.error) {
+      console.error(`Contact form: the confirmation email failed (${resendErrorText(confirmed.error)}).`);
+    } else {
+      console.info(`Contact form: confirmation email sent (id ${confirmed.data.id}).`);
+    }
+  } catch (error) {
+    console.error(`Contact form: the confirmation email threw (${errorText(error)}).`);
+  }
 
   return reply({ ok: true });
 }
