@@ -22,16 +22,17 @@ function newsletterOrigins(): string[] {
 const connectSrc = ["'self'", ...newsletterOrigins()].join(" ");
 
 // This Content Security Policy blocks unauthorized scripts and external assets.
-// Allowed on top of 'self': the visitor badge, YouTube thumbnails (i.ytimg.com), and YouTube
-// players (youtube-nocookie.com) which the YouTube tab only loads after a click.
+// Allowed on top of 'self': the visitor badge, YouTube thumbnails (i.ytimg.com), YouTube
+// players (youtube-nocookie.com) which the YouTube tab only loads after a click, and Cloudflare
+// Turnstile (challenges.cloudflare.com: its script and iframe) for the spam check on /hire.
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline';
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https://visitor-badge.laobi.icu https://i.ytimg.com https://www.notion.so https://prod-files-secure.s3.us-west-2.amazonaws.com https://s3.us-west-2.amazonaws.com https://images.unsplash.com;
   font-src 'self';
   connect-src ${connectSrc};
-  frame-src https://www.youtube-nocookie.com;
+  frame-src https://www.youtube-nocookie.com https://challenges.cloudflare.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

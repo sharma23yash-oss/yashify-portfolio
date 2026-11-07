@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 import { EASE, FOCUS, cn } from '@/components/ui/tokens';
+import { WHATSAPP_URL } from '@/lib/site';
 
 /* ============================ TWEAK HERE ============================
  * Colours are picked to show up on the light #FAFAFA page: deep amber, orange and magenta
@@ -551,7 +552,11 @@ export default function DiwaliEffects() {
           aria-label="Festive mode"
           title={`Festive mode ${enabled ? 'on' : 'off'}`}
           className={cn(
-            'fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-[3] inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full border px-2.5 text-[13px] font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.05),0_10px_24px_-12px_rgba(15,23,42,0.35)] transition-colors sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:left-6 sm:px-3.5',
+            'fixed left-4 z-[3] inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full border px-2.5 text-[13px] font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.05),0_10px_24px_-12px_rgba(15,23,42,0.35)] transition-colors sm:left-6 sm:px-3.5',
+            // The WhatsApp button (components/site/WhatsAppButton.tsx) owns the bottom-left corner when set; sit above it.
+            WHATSAPP_URL
+              ? 'bottom-[calc(max(1rem,env(safe-area-inset-bottom))+3.5rem)] sm:bottom-[calc(max(1.5rem,env(safe-area-inset-bottom))+4rem)]'
+              : 'bottom-[max(1rem,env(safe-area-inset-bottom))] sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))]',
             enabled
               ? 'border-[#0B1F3A] bg-[#0B1F3A] text-white hover:bg-[#14305A]'
               : 'border-slate-300 bg-white/90 text-slate-700 hover:border-slate-400',
