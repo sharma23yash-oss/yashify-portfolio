@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import FestiveLayer from "@/components/festive/FestiveLayer";
+import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -111,6 +112,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         {/* Diwali effects: client-only, loaded after the page, switch themselves off after FESTIVE_END_DATE. */}
         <FestiveLayer />
+        <WhatsAppButton />
       </body>
     </html>
   );

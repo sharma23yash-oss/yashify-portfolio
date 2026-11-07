@@ -7,7 +7,7 @@
  * research and financial modeling), two proof cards, then the resume and contact buttons.
  *
  * Words    everything you read in the hero is in the CONTENT block below, except the name and the
- *          one-line headline, which come from SITE in app/page.tsx. The lines are taken from the
+ *          one-line headline, which come from SITE in lib/site.ts. The lines are taken from the
  *          resume (public/resume.pdf). If one stops being true, change or delete it here.
  * Needs    the .ys-* classes of PAGE_CSS in app/page.tsx, the 3D scenes in components/three/,
  *          and, for the animation, being rendered inside the page's <MotionConfig>.
@@ -15,6 +15,7 @@
  */
 
 import Image from 'next/image';
+import Link from 'next/link';
 import type { MouseEvent, ReactNode } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import {
@@ -304,6 +305,16 @@ export function EquityResearchHero({
             <Mail className="h-5 w-5 transition-transform duration-200 group-hover:-rotate-6" />
             Get in touch
           </motion.button>
+          <Link
+            href="/hire"
+            className={cn(
+              'group inline-flex items-center gap-2 rounded-full px-5 py-4 text-base font-semibold text-teal-800 underline decoration-teal-700/40 underline-offset-4 transition-colors duration-200 hover:text-teal-900 hover:decoration-teal-800',
+              FOCUS,
+            )}
+          >
+            Hire me for a project
+            <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
         </motion.div>
 
         <div className="mt-14 grid w-full gap-4 text-left sm:grid-cols-2">
