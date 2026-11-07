@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
+import FestiveLayer from "@/components/festive/FestiveLayer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -108,6 +109,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_JSON_LD).replace(/</g, "\\u003c") }}
         />
         {children}
+        {/* Diwali effects: client-only, loaded after the page, switch themselves off after FESTIVE_END_DATE. */}
+        <FestiveLayer />
       </body>
     </html>
   );
