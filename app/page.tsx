@@ -200,6 +200,16 @@ type ProjectItem = {
 // Finance work first: it is what recruiters scan for. Ventures follow.
 const PROJECTS: ProjectItem[] = [
   {
+    title: 'Fintech Customer Intelligence & Growth Analytics',
+    tagline: 'Synthetic-data brokerage analytics case study',
+    summary:
+      'End-to-end analytics on a fictional Indian brokerage (10,000 synthetic users): funnel, campaign efficiency, retention, support, 15 recommendations and 10 proposed experiments. Synthetic data; not affiliated with any company.',
+    tags: ['SQL', 'Python', 'Excel', 'Analytics'],
+    Icon: ShieldCheck,
+    href: 'https://github.com/sharma23yash-oss/fintech-customer-intelligence-analytics',
+    linkLabel: 'View the repository',
+  },
+  {
     title: 'Indian Banking Sector Optimizer',
     tagline: 'Modern Portfolio Theory, Python',
     summary:
