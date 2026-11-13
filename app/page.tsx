@@ -210,6 +210,16 @@ const PROJECTS: ProjectItem[] = [
     linkLabel: 'View the Indian Banking Sector Optimizer repository',
   },
   {
+    title: 'BICL Enterprise Planning (Anaplan) Transformation',
+    tagline: 'FP&A case study, four phases',
+    summary:
+      'A fictional four-phase case for a manufacturer: data audit, an integrated three-statement model with scenarios, Anaplan build specification and UAT, and a business-value case with ROI and an FP&A Centre of Excellence. All figures are illustrative; no live deployment or realised savings are claimed.',
+    tags: ['FP&A', 'Anaplan', 'Financial Modelling', 'ROI / TCO', 'Python'],
+    Icon: Building2,
+    href: 'https://github.com/sharma23yash-oss/bicl-anaplan-fpa-transformation',
+    linkLabel: 'View the BICL Enterprise Planning case repository',
+  },
+  {
     title: 'Excel DCF Modeling & Data Analytics',
     tagline: 'Power BI, SQL, Python',
     summary:
